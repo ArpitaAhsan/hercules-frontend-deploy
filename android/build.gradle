@@ -1,6 +1,18 @@
-allprojects {
+// Root build.gradle file
+
+buildscript {
     repositories {
         google()
+        mavenCentral() // Add mavenCentral() here as well
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.3.0' // Upgraded AGP version
+    }
+}
+
+allprojects {
+    repositories {
+        google()    // Repositories for resolving dependencies
         mavenCentral()
     }
 }
