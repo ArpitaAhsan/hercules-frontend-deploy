@@ -47,28 +47,32 @@ class _ProfilePageState extends State<ProfilePage> {
                 pinned: true,
                 backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                 flexibleSpace: FlexibleSpaceBar(
-                  background: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CircleAvatar(
-                        radius: 60,
-                        backgroundImage: NetworkImage("https://via.placeholder.com/150"),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        profileProvider.name.isNotEmpty ? profileProvider.name : "Loading...",
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
+                  background: Container(
+                    color: Colors.black87,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircleAvatar(
+                          radius: 60,
+                          backgroundImage: NetworkImage("https://via.placeholder.com/150"),
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        profileProvider.email.isNotEmpty ? profileProvider.email : "Loading email...",
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey,
+                        const SizedBox(height: 12),
+                        Text(
+                          profileProvider.name.isNotEmpty ? profileProvider.name : "Loading...",
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,  // White text here
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 4),
+                        Text(
+                          profileProvider.email.isNotEmpty ? profileProvider.email : "Loading email...",
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.white,  // White text here
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -85,9 +89,10 @@ class _ProfilePageState extends State<ProfilePage> {
                       title: "Edit Profile",
                       subtitle: "Update your personal details",
                       onTap: () {
-                        // Navigate to Edit Profile
                         Navigator.pushNamed(context, AppRoutes.editProfile);
                       },
+                      backgroundColor: const Color(0xFFDAF0FF),
+                      iconBgColor: const Color(0xFF8FCBFF),
                     ),
 
                     _buildProfileOption(
@@ -96,14 +101,14 @@ class _ProfilePageState extends State<ProfilePage> {
                       title: "Change Password",
                       subtitle: "Update your password for security",
                       onTap: () {
-                        // Navigate to Change Password screen
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => ChangePasswordPage()),
                         );
                       },
+                      backgroundColor: const Color(0xFFFEE7DA),
+                      iconBgColor: const Color(0xFFFFB07C),
                     ),
-
 
                     const SizedBox(height: 20),
                     _buildSectionTitle("Preferences", context),
@@ -114,14 +119,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       title: "Permission Settings",
                       subtitle: "Manage your permissions",
                       onTap: () => print("Navigate to Permission Settings"),
-                    ),
-
-                    _buildProfileOption(
-                      context,
-                      icon: Icons.color_lens_outlined,
-                      title: "Theme",
-                      subtitle: "Choose your preferred theme",
-                      onTap: () => print("Navigate to Theme Selector"),
+                      backgroundColor: const Color(0xFFD6F5E1),
+                      iconBgColor: const Color(0xFF8DD69E),
                     ),
 
                     const SizedBox(height: 20),
@@ -133,6 +132,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       title: "Service History",
                       subtitle: "Check your past services",
                       onTap: () => print("Navigate to Service History"),
+                      backgroundColor: const Color(0xFFF6D6F0),
+                      iconBgColor: const Color(0xFFDB8CD6),
                     ),
 
                     _buildProfileOption(
@@ -141,6 +142,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       title: "Your Reviews",
                       subtitle: "Manage and view your reviews",
                       onTap: () => print("Navigate to Your Reviews"),
+                      backgroundColor: const Color(0xFFFFE8A1),
+                      iconBgColor: const Color(0xFFFFD555),
                     ),
 
                     const SizedBox(height: 20),
@@ -152,6 +155,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       title: "Help & Feedback",
                       subtitle: "Contact us for assistance",
                       onTap: () => print("Navigate to Help & Feedback"),
+                      backgroundColor: const Color(0xFFCEE3F6),
+                      iconBgColor: const Color(0xFF94BFFB),
                     ),
 
                     const SizedBox(height: 20),
@@ -160,11 +165,13 @@ class _ProfilePageState extends State<ProfilePage> {
                     _buildProfileOption(
                       context,
                       icon: Icons.login_outlined,
-                      iconColor: Colors.red,
                       title: "Log Out",
                       titleColor: Colors.red,
                       subtitle: "Log out of your account",
                       onTap: () => _showLogOutDialog(context),
+                      backgroundColor: const Color(0xFFFDEDED),
+                      iconBgColor: const Color(0xFFFAB6B6),
+                      iconColor: Colors.red,
                     ),
 
                     const SizedBox(height: 120),
@@ -178,7 +185,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // Section Titles
+  // Section Titles with white text
   Widget _buildSectionTitle(String title, BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -186,18 +193,20 @@ class _ProfilePageState extends State<ProfilePage> {
         title,
         style: Theme.of(context).textTheme.headlineSmall!.copyWith(
           fontWeight: FontWeight.bold,
+          color: Colors.white,  // <-- White text here
         ),
       ),
     );
   }
 
-  // Profile Option Cards with border
   Widget _buildProfileOption(
       BuildContext context, {
         required IconData icon,
         required String title,
         required String subtitle,
         required VoidCallback onTap,
+        Color? backgroundColor,
+        Color? iconBgColor,
         Color? iconColor,
         Color? titleColor,
       }) {
@@ -207,9 +216,8 @@ class _ProfilePageState extends State<ProfilePage> {
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Theme.of(context).cardTheme.color,
+          color: backgroundColor ?? Theme.of(context).cardTheme.color,
           borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: Colors.grey.shade300),  // Adding border here
           boxShadow: const [
             BoxShadow(
               color: Colors.black12,
@@ -220,7 +228,14 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         child: Row(
           children: [
-            Icon(icon, size: 28, color: iconColor ?? Colors.blue),
+            Container(
+              decoration: BoxDecoration(
+                color: iconBgColor ?? Colors.blue.shade100,
+                shape: BoxShape.circle,
+              ),
+              padding: const EdgeInsets.all(10),
+              child: Icon(icon, size: 28, color: iconColor ?? Colors.blue),
+            ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -250,7 +265,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // Show Log Out Dialog
   void _showLogOutDialog(BuildContext context) {
     showDialog(
       context: context,

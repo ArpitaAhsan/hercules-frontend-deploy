@@ -41,18 +41,7 @@ class AppRoutes {
         updatePageIndex: (index) {}, // Customize this callback
       );
     },
-    nearby: (context) => FutureBuilder<String?>(
-      future: _getUserIdFromPrefs(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError || snapshot.data == null) {
-          return const Center(child: Text('User ID not found'));
-        } else {
-          return NearbyPage(); // Pass userId fetched in NearbyPage
-        }
-      },
-    ),
+    nearby: (context) => NearbyPage(), // Directly use NearbyPage
     register: (context) => RegisterPage(),
   };
 

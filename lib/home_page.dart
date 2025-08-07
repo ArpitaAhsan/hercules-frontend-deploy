@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hercules/services/api_service.dart';
 import 'package:hercules/styles/app_colors.dart';
-import 'package:hercules/config/app_routes.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -12,30 +13,133 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _helpButtonTapCount = 0;
 
-  // Show the 'Help Asked' message after 3 or more quick taps
-  void _onHelpButtonTapped() {
-    _helpButtonTapCount++; // Increase count
+  // Emergency types with circle colors only (no hex strings)
+  Map<String, String> emergencyTypes = {
+    '🟣 Rape': 'purple',
+    '🟡 Mugging': 'yellow',
+    '🟤 Riot': 'brown',
+    '🟠 Fire': 'orange',
+    '🟢 Domestic Abuse': 'green',
+    '🔴 General Emergency': 'red',
+  };
 
+  String _selectedEmergencyType = '🔴 General Emergency'; // Default circle to General Emergency
+
+  Map<String, int> _tapCounts = {
+    '🟣 Rape': 0,
+    '🟡 Mugging': 0,
+    '🟤 Riot': 0,
+    '🟠 Fire': 0,
+    '🟢 Domestic Abuse': 0,
+    '🔴 General Emergency': 0,
+  };
+
+  Color selectedColor = Colors.red; // Default to red (General Emergency)
+
+  Future<void> _onHelpButtonTapped() async {
+    _helpButtonTapCount++;
     if (_helpButtonTapCount >= 3) {
-      _showHelpMessage();
-      _helpButtonTapCount = 0; // Reset tap count
+      _helpButtonTapCount = 0;
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getString('userId');
+      final latitude = prefs.getDouble('latitude');
+      final longitude = prefs.getDouble('longitude');
+
+      if (userId != null && latitude != null && longitude != null) {
+        String emergencyType = 'General Emergency';
+
+        // Use color name from emergencyTypes map, matching NearbyPage colors
+        final alertColor = emergencyTypes[_selectedEmergencyType]!;
+
+        final logResponse = await ApiService.logEmergencyAlert(
+          userId: userId,
+          emergencyType: emergencyType,
+          alertColor: alertColor,
+          location: {
+            'type': 'Point',
+            'coordinates': [longitude, latitude],
+          },
+        );
+
+        if (!logResponse.containsKey('error')) {
+          await ApiService.updateEmergencyStatus(
+            userId: userId,
+            isEmergency: true,
+            emergencyAlertColor: alertColor,
+          );
+
+          await ApiService.triggerEmergency(userId);
+
+          if (mounted) {
+            Navigator.pushReplacementNamed(context, '/nearby');
+          }
+        } else {
+          print("❌ Error: ${logResponse['error']}");
+        }
+      } else {
+        print("⚠️ User ID or location not found.");
+      }
     }
   }
 
-  void _showHelpMessage() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Help Asked')),
-    );
+  Future<void> _handleEmergency(String emergencyType) async {
+    _tapCounts[emergencyType] = (_tapCounts[emergencyType] ?? 0) + 1;
+
+    if (_tapCounts[emergencyType]! >= 2) {
+      _tapCounts[emergencyType] = 0;
+
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getString('userId');
+      final latitude = prefs.getDouble('latitude');
+      final longitude = prefs.getDouble('longitude');
+      final color = emergencyTypes[emergencyType]!; // Use color name here
+
+      if (userId != null && latitude != null && longitude != null) {
+        final location = {
+          'type': 'Point',
+          'coordinates': [longitude, latitude],
+        };
+
+        final response = await ApiService.logEmergencyAlert(
+          userId: userId,
+          emergencyType: emergencyType.replaceAll(RegExp(r'[^\w\s]+'), '').trim(),
+          alertColor: color,
+          location: location,
+        );
+
+        if (!response.containsKey('error')) {
+          await ApiService.updateEmergencyStatus(
+            userId: userId,
+            isEmergency: true,
+            emergencyAlertColor: color,
+          );
+
+          await ApiService.triggerEmergency(userId);
+
+          if (mounted) {
+            Navigator.pushReplacementNamed(context, '/nearby');
+          }
+        } else {
+          print("❌ Error logging alert: ${response['error']}");
+        }
+      } else {
+        print("⚠️ User ID or location not found.");
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    String selectedColorName = emergencyTypes[_selectedEmergencyType]!;
+    selectedColor = _getColorFromName(selectedColorName);
+
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.transparent, // Removes the grey background
-        elevation: 0, // Removes shadow effect
+        backgroundColor: AppColors.background,
+        elevation: 0,
         leading: Padding(
-          padding: EdgeInsets.all(8.0), // Optional padding for better spacing
+          padding: const EdgeInsets.all(8.0),
           child: ClipOval(
             child: Image.asset(
               'assets/hercules_logo.png',
@@ -47,116 +151,148 @@ class _HomePageState extends State<HomePage> {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.notifications, color: Colors.black), // Set icon color if needed
+            icon: const Icon(Icons.notifications),
+            color: AppColors.primary,
             onPressed: () {
               print('Notification clicked');
             },
           ),
         ],
       ),
-
-      body: GestureDetector(
-        onTap: _onHelpButtonTapped,
-        child: Center(
-          child: Stack(
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: GestureDetector(
+          onTap: _onHelpButtonTapped,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Positioned "OPTIONS" dropdown above the HELP button
-              Positioned(
-                top: 50, // Positioned near the top of the screen
-                left: 20,
-                right: 20,
+              const SizedBox(height: 20),
+
+              // Removed filtering dropdown (no filter on this page)
+
+              const SizedBox(height: 40),
+              Center(
                 child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12), // Add padding inside the box
+                  height: 280,
+                  width: 280,
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade300, // Light grey background for dropdown
-                    borderRadius: BorderRadius.circular(8),
+                    color: selectedColor,
+                    shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 8.0,
+                        color: Colors.black.withOpacity(0.4),
+                        blurRadius: 14.0,
                       ),
                     ],
                   ),
-                  child: DropdownButton<String>(
-                    hint: Center( // Center align the text
-                      child: Text(
-                        'OPTIONS',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                        textAlign: TextAlign.center,
+                  child: Center(
+                    child: Text(
+                      // Show emergency text without emoji prefix:
+                      _selectedEmergencyType.split(' ').skip(1).join(' '),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 48,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    underline: SizedBox(), // Remove default underline
-                    onChanged: (value) {},
-                    items: <String>[
-                      '🟣 Rape',  // Purple Circle for Rape
-                      '🟠 Mugging', // Orange Circle for Mugging
-                      '🟡 Riot', // Yellow Circle for Riot
-                      '🔵 Fire', // Blue Circle for Fire
-                      '🟢 Domestic Abuse' // Green Circle for Domestic Abuse
-                    ].map((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(
-                          value,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold, // Keep text bold
-                            color: Colors.black, // Keep text black
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                    style: TextStyle(color: Colors.black),
-                    iconEnabledColor: Colors.black,
-                    iconDisabledColor: Colors.black,
-                    dropdownColor: Colors.grey.shade300, // Light grey background
-                    isExpanded: true,
                   ),
                 ),
               ),
-
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Bigger "HELP!" Button
-                    Container(
-                      height: 350, // Increased size for Help button
-                      width: 350,
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.5),
-                            blurRadius: 12.0, // Increased blur for the shadow
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Text(
-                          'HELP!',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 70, // Bigger font size for visibility
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                    // Instructions text (optional)
-                    Text(
-                      'Tap quickly 3 or more times to ask for help.',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                  ],
+              const SizedBox(height: 24),
+              Text(
+                'Tap quickly 3 or more times to ask for help.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 15, color: AppColors.font2),
+              ),
+              const SizedBox(height: 40),
+              Text(
+                'Or scroll down and tap an emergency type twice:',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.font,
                 ),
               ),
+              const SizedBox(height: 16),
+              ...emergencyTypes.keys.map((String value) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      _handleEmergency(value);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _getPastelColorFor(value),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 3,
+                      minimumSize: const Size.fromHeight(50),
+                    ),
+                    child: Text(
+                      value,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: _getTextColorForPastel(_getPastelColorFor(value)),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+              const SizedBox(height: 60),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Color _getColorFromName(String colorName) {
+    switch (colorName) {
+      case 'purple':
+        return Colors.purple;
+      case 'yellow':
+        return Colors.amber;
+      case 'brown':
+        return Colors.brown;
+      case 'orange':
+        return Colors.deepOrange;
+      case 'green':
+        return Colors.green;
+      case 'red':
+        return Colors.red;
+      default:
+        return Colors.red;
+    }
+  }
+
+  // Pastel background colors for buttons
+  Color _getPastelColorFor(String emergencyKey) {
+    switch (emergencyKey) {
+      case '🟣 Rape':
+        return const Color(0xFFD8B4F2); // pastel purple
+      case '🟡 Mugging':
+        return const Color(0xFFFFF9C4); // pastel yellow
+      case '🟤 Riot':
+        return const Color(0xFFBCAAA4); // pastel brown/greyish
+      case '🟠 Fire':
+        return const Color(0xFFFFCCBC); // pastel orange
+      case '🟢 Domestic Abuse':
+        return const Color(0xFFA5D6A7); // pastel green
+      case '🔴 General Emergency':
+        return const Color(0xFFFF8A80); // pastel red
+      default:
+        return Colors.grey.shade200;
+    }
+  }
+
+  // Determine text color for contrast on pastel backgrounds
+  Color _getTextColorForPastel(Color bgColor) {
+    // Simple check: if pastel is light, use dark text; else white
+    double brightness = (bgColor.red * 0.299 + bgColor.green * 0.587 + bgColor.blue * 0.114);
+    return brightness > 186 ? Colors.black : Colors.white;
   }
 }

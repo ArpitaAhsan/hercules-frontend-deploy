@@ -9,6 +9,10 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hercules/profile_provider.dart';
+import 'package:hercules/call_help.dart';
+import 'package:hercules/activity_log.dart'; // Ensure ActivityLogPage is imported
+import 'package:hercules/blog_post.dart';
+import 'package:hercules/blog_feed.dart';
 
 class LocationPage extends StatefulWidget {
   const LocationPage({super.key});
@@ -149,7 +153,15 @@ class MyBottomNavigation extends StatelessWidget {
                   Spacer(),
                   Expanded(
                     child: BottomNavigationItem(
-                      onPressed: () => onTap(Menus.messages),
+                      onPressed: () {
+                        // Navigate to CallHelpPage
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const CallHelpPage(),
+                          ),
+                        );
+                      },
                       icon: Icons.message,
                       current: currentIndex,
                       name: Menus.messages,
@@ -157,7 +169,15 @@ class MyBottomNavigation extends StatelessWidget {
                   ),
                   Expanded(
                     child: BottomNavigationItem(
-                      onPressed: () => onTap(Menus.user),
+                      onPressed: () {
+                        // Navigate to ActivityLogPage
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ActivityLogPage(),
+                          ),
+                        );
+                      },
                       icon: Icons.person,
                       current: currentIndex,
                       name: Menus.user,
@@ -172,7 +192,15 @@ class MyBottomNavigation extends StatelessWidget {
             right: 0,
             bottom: 16,
             child: GestureDetector(
-              onTap: () => onTap(Menus.add),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const BlogFeedPage(), // Create this next
+                  ),
+                );
+              },
+
               child: Container(
                 width: 64,
                 height: 64,

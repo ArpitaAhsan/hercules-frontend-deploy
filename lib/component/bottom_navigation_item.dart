@@ -17,11 +17,41 @@ class BottomNavigationItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      onPressed: onPressed,
-      icon: Icon(
-        icon, // Use the passed icon dynamically
-        color: current == name ? Colors.black : Colors.black.withOpacity(0.3),
+    final bool isActive = current == name;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+      child: GestureDetector(
+        onTap: onPressed,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: (isActive && name != Menus.add) ? const Color(0xFFE3F2FD) : Colors.transparent,
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: Icon(
+                icon,
+                size: 28, // Adjust size to avoid clipping
+                color: isActive ? Colors.black87 : Colors.black38,
+              ),
+            ),
+
+            const SizedBox(height: 4),
+            Container(
+              height: 4,
+              width: 4,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isActive ? Colors.black87 : Colors.transparent,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

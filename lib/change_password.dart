@@ -15,9 +15,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
   void _changePassword() async {
     if (_newPasswordController.text != _confirmPasswordController.text) {
-      // Passwords do not match
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("New passwords do not match")),
+        const SnackBar(content: Text("New passwords do not match")),
       );
       return;
     }
@@ -41,72 +40,118 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       });
 
       if (response.containsKey('error')) {
-        // Show error message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(response['error'])),
         );
       } else {
-        // Successfully changed password
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Password changed successfully")),
+          const SnackBar(content: Text("Password changed successfully")),
         );
-
-        // Navigate back to EditProfilePage with success message
         Navigator.pop(context, 'Password changed successfully');
       }
     } else {
-      // User ID not found
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("No user ID found")),
+        const SnackBar(content: Text("No user ID found")),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final pastelBlue = const Color(0xFFDAF0FF);
+    final pastelBlueAccent = const Color(0xFF8FCBFF);
+
     return Scaffold(
       appBar: AppBar(
-        title: Text("Change Password"),
+        title: const Text("Change Password"),
+        backgroundColor: pastelBlueAccent,
+        elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: _currentPasswordController,
-              obscureText: true,
-              decoration: InputDecoration(
+      backgroundColor: Colors.black.withOpacity(0.4),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildPastelInputField(
+                controller: _currentPasswordController,
                 labelText: "Current Password",
-                border: OutlineInputBorder(),
+                obscureText: true,
               ),
-            ),
-            SizedBox(height: 16),
-            TextField(
-              controller: _newPasswordController,
-              obscureText: true,
-              decoration: InputDecoration(
+              const SizedBox(height: 20),
+              _buildPastelInputField(
+                controller: _newPasswordController,
                 labelText: "New Password",
-                border: OutlineInputBorder(),
+                obscureText: true,
               ),
-            ),
-            SizedBox(height: 16),
-            TextField(
-              controller: _confirmPasswordController,
-              obscureText: true,
-              decoration: InputDecoration(
+              const SizedBox(height: 20),
+              _buildPastelInputField(
+                controller: _confirmPasswordController,
                 labelText: "Confirm New Password",
-                border: OutlineInputBorder(),
+                obscureText: true,
               ),
-            ),
-            SizedBox(height: 32),
-            _isLoading
-                ? Center(child: CircularProgressIndicator())
-                : ElevatedButton(
-              onPressed: _changePassword,
-              child: Text("Change Password"),
-            ),
-          ],
+              const SizedBox(height: 40),
+              _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ElevatedButton(
+                onPressed: _changePassword,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: pastelBlueAccent,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 6,
+                  shadowColor: pastelBlueAccent.withOpacity(0.5),
+                ),
+                child: const Text(
+                  "Change Password",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPastelInputField({
+    required TextEditingController controller,
+    required String labelText,
+    bool obscureText = false,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFDAF0FF),
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: obscureText,
+        style: const TextStyle(color: Colors.black),
+        decoration: InputDecoration(
+          labelText: labelText,
+          labelStyle: const TextStyle(color: Colors.black54),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+            borderSide: BorderSide.none,
+          ),
+          filled: true,
+          fillColor: Colors.transparent,
+          contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
         ),
       ),
     );

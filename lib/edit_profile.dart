@@ -3,7 +3,7 @@ import 'package:hercules/component/toolbar.dart';
 import 'package:hercules/component/app_text_field.dart';
 import 'package:hercules/config/app_string.dart';
 import 'package:hercules/styles/app_colors.dart';
-import 'package:hercules/services/api_service.dart'; // Import the ApiService
+import 'package:hercules/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hercules/config/app_routes.dart';
 
@@ -19,7 +19,7 @@ class _EditProfileState extends State<EditProfile> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _countryController = TextEditingController();
 
-  String userId = "";  // To store dynamic userId
+  String userId = "";
 
   @override
   void initState() {
@@ -27,33 +27,29 @@ class _EditProfileState extends State<EditProfile> {
     _loadUserId();
   }
 
-  // Load the user ID from shared preferences
   void _loadUserId() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       userId = prefs.getString('userId') ?? "";
     });
-
-    // After loading the userId, fetch the user's current profile
     if (userId.isNotEmpty) {
       _fetchUserProfile(userId);
     }
   }
 
-  // Fetch the current user profile from the API
   void _fetchUserProfile(String userId) async {
     final response = await ApiService.fetchUserProfile(userId);
     if (response['error'] == null) {
-      _nameController.text = response['name'];
-      _phoneController.text = response['phone'];
-      _countryController.text = response['country'];
+      setState(() {
+        _nameController.text = response['name'] ?? "";
+        _phoneController.text = response['phone'] ?? "";
+        _countryController.text = response['country'] ?? "";
+      });
     } else {
-      // Handle error if fetching profile failed
       print("❌ Error fetching profile: ${response['error']}");
     }
   }
 
-  // Update Profile function
   void _updateProfile() async {
     final response = await ApiService.updateUserProfile(
       userId: userId,
@@ -63,50 +59,116 @@ class _EditProfileState extends State<EditProfile> {
     );
 
     if (response['error'] == null) {
-      // Navigate to Profile Page after successful update
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Profile updated successfully")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Profile updated successfully")),
+      );
       Navigator.pushNamedAndRemoveUntil(context, AppRoutes.profile, (route) => false);
     } else {
-      // Show error message if update fails
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(response['error'])));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(response['error'])),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: Toolbar(title: AppString.editProfile),
+      appBar: AppBar(
+        title: const Text("Edit Profile"),
+        backgroundColor: Colors.blue[200],
+        elevation: 0,
+      ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
           child: Column(
             children: [
-              SizedBox(height: 60),
-              AppTextField(
-                hint: "Name", // Updated field
+              // Name Field
+              _buildPastelInputField(
                 controller: _nameController,
+                hintText: "Name",
+                icon: Icons.person_outline,
               ),
-              SizedBox(height: 16),
-              AppTextField(
-                hint: "Phone Number", // Updated field
+              const SizedBox(height: 20),
+
+              // Phone Field
+              _buildPastelInputField(
                 controller: _phoneController,
+                hintText: "Phone Number",
+                icon: Icons.phone_outlined,
+                keyboardType: TextInputType.phone,
               ),
-              SizedBox(height: 16),
-              AppTextField(
-                hint: "Country", // Updated field
+              const SizedBox(height: 20),
+
+              // Country Field
+              _buildPastelInputField(
                 controller: _countryController,
+                hintText: "Country",
+                icon: Icons.flag_outlined,
               ),
-              SizedBox(height: 32),
+              const SizedBox(height: 40),
+
+              // Save Button with pastel background
               ElevatedButton(
                 onPressed: _updateProfile,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  padding: EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                  backgroundColor: const Color(0xFF8FCBFF), // pastel blue
+                  padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 6,
+                  shadowColor: const Color(0xFF8FCBFF).withOpacity(0.5),
                 ),
-                child: Text("Save Changes", style: TextStyle(color: Colors.white)),
+                child: const Text(
+                  "Save Changes",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPastelInputField({
+    required TextEditingController controller,
+    required String hintText,
+    IconData? icon,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFDAF0FF), // pastel light blue background
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        style: const TextStyle(color: Colors.black87),
+        decoration: InputDecoration(
+          prefixIcon: icon != null ? Icon(icon, color: const Color(0xFF8FCBFF)) : null,
+          hintText: hintText,
+          hintStyle: const TextStyle(color: Colors.black45),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+            borderSide: BorderSide.none,
+          ),
+          filled: true,
+          fillColor: Colors.transparent,
+          contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
         ),
       ),
     );

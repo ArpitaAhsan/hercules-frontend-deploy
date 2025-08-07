@@ -52,13 +52,13 @@ class _RegisterPageState extends State<RegisterPage> {
             SnackBar(content: Text(response['error'])),
           );
         } else {
-          // If successful, navigate to home or show success message
+          // If successful, navigate to login page
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Registration Successful!')),
           );
 
-          // Navigate to the home page
-          Navigator.of(context).pushReplacementNamed(AppRoutes.location);
+          // Navigate to the login page
+          Navigator.of(context).pushReplacementNamed(AppRoutes.login); // Modified this line
         }
       } catch (e) {
         // Handle any exceptions or errors during the API call
