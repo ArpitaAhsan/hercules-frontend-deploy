@@ -4,8 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   static const String _baseUrl = "http://192.168.0.101:9062/api/auth";
-  // sfsdig kd nerfi sm
-  // Register User
+  //static const String _baseUrl = "https://hercules-ddlq.onrender.com/api/auth";
   static Future<Map<String, dynamic>> registerUser({
     required String name,
     required String email,
